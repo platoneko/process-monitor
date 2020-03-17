@@ -5,7 +5,17 @@
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent),
     ui(new Ui::MainWindow),
-    model(new QStandardItemModel)
+    timer(new QTimer),
+    model(new QStandardItemModel),
+    cpuHistory(new std::list<float>(POINT_NUM, 0.0)),
+    cpuSeries(new QLineSeries),
+    cpuChart(new QChart),
+    memHistory(new std::list<float>(POINT_NUM, 0.0)),
+    memSeries(new QLineSeries),
+    memChart(new QChart) ,
+    swapHistory(new std::list<float>(POINT_NUM, 0.0)),
+    swapSeries(new QLineSeries),
+    swapChart(new QChart)
 {
     dir_ptr = opendir("/proc");
     chdir("/proc");
@@ -22,9 +32,9 @@ MainWindow::MainWindow(QWidget *parent)
 
     initMainTab();
     initSystemTab();
+    initPerformanceTab();
     update();
 
-    timer = new QTimer(this);
     connect(timer, &QTimer::timeout, this, &MainWindow::update);
     timer->start(3000);
 }
@@ -33,6 +43,11 @@ MainWindow::~MainWindow()
 {
     closedir(dir_ptr);
     delete ui;
+    delete timer;
+    delete model;
+    delete cpuHistory;
+    delete cpuSeries;
+    delete cpuChart;
 }
 
 void MainWindow::update() {
@@ -46,6 +61,9 @@ void MainWindow::update() {
     updateTasksLabel();
     updateTaskTable();
     updateCurrentDatetimeLabel();
+    updateCpuChart();
+    updateMemChart();
+    updateSwapChart();
     updateFree.release();
 }
 
@@ -65,6 +83,12 @@ void MainWindow::updateTaskInfo() {
     // char command[MAXLINE];
 
     unsigned long virt, res, shr;
+
+    struct timeval tv;
+    gettimeofday(&tv, nullptr);
+    time_t currDatetime = tv.tv_sec * 1000000 + tv.tv_usec;
+    timeInterval = currDatetime - lastDatetime;
+    lastDatetime = currDatetime;
 
     cpuUsed = 0.0;
     taskTotal = taskRunning = taskSleeping = taskStopped = taskZombie = 0;
@@ -140,7 +164,7 @@ void MainWindow::updateTaskInfo() {
                 taskInfo->res = res;
                 taskInfo->shr = shr;
                 taskInfo->s = state;
-                taskInfo->cpu = float(utime+stime-taskInfo->time)/3;
+                taskInfo->cpu = float(utime+stime-taskInfo->time)*1000000/timeInterval;
                 taskInfo->mem = float(res<<10)/currentSysinfo.totalram*100;
                 taskInfo->time = utime+stime;
                 taskInfo->comm = std::string(comm, 1, strlen(comm)-2);

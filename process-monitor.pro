@@ -24,7 +24,8 @@ SOURCES += \
     killdialog.cpp \
     searchdialog.cpp \
     systemtab.cpp \
-    shutdowndialog.cpp
+    shutdowndialog.cpp \
+    performancetab.cpp
 
 HEADERS += \
     mainwindow.h \

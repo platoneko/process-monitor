@@ -18,6 +18,8 @@
 #include <QKeyEvent>
 #include <QSemaphore>
 #include <QMessageBox>
+#include <QLineSeries>
+#include <QtCharts>
 
 #include <unistd.h>
 #include <sys/stat.h>
@@ -31,6 +33,8 @@
 
 #include <cstring>
 #include <unordered_map>
+#include <list>
+
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -50,6 +54,8 @@ static constexpr int S_COLUMN = 9;
 static constexpr int CPU_COLUMN = 10;
 static constexpr int MEM_COLUMN = 11;
 static constexpr int TIME_COLUMN = 12;
+
+static constexpr int POINT_NUM = 40;
 
 enum SortMethodType {PID_ASC, PID_DES,
                      PPID_ASC, PPID_DES,
@@ -82,11 +88,17 @@ private:
     QTimer *timer;
     QStandardItemModel *model;
     std::unordered_map<int, TaskInfo *> taskInfoDict;
+
     struct sysinfo currentSysinfo;
+    time_t lastDatetime = 0;
+    time_t timeInterval = 3000;
+
     int taskTotal = 0, taskRunning = 0, taskSleeping = 0, taskStopped = 0, taskZombie = 0;
     float cpuUsed = 0.0;
     int matchedTaskTotal = 0;
+
     DIR *dir_ptr;
+
     unsigned char sortMethod = S_ASC;
     const std::unordered_map<char, int> statePriority = {{'R', 0}, {'S', 1}, {'I', 2}, {'T', 3}, {'D', 4}, {'Z', 5}};
 
@@ -108,7 +120,17 @@ private:
     bool searchMode = false;
     std::string searchedCommand;
 
-    // QChartView *chartView;
+    std::list<float> *cpuHistory;
+    QLineSeries *cpuSeries;
+    QChart *cpuChart;
+
+    std::list<float> *memHistory;
+    QLineSeries *memSeries;
+    QChart *memChart;
+
+    std::list<float> *swapHistory;
+    QLineSeries *swapSeries;
+    QChart *swapChart;
 
 private slots:
     void on_sectionClicked(int index);
@@ -133,7 +155,9 @@ private slots:
     void keyPressEvent(QKeyEvent *event);
 
 private:
-    void updateSysinfo() { sysinfo(&currentSysinfo); }
+    void updateSysinfo() {
+        sysinfo(&currentSysinfo);
+    }
     void updateTaskInfo();
 
     void initMainTab();
@@ -152,6 +176,11 @@ private:
     void updateHostnameGroup();
     void updateLastLoginDatetimeLabel();
     void updateCurrentDatetimeLabel();
+
+    void initPerformanceTab();
+    void updateCpuChart();
+    void updateMemChart();
+    void updateSwapChart();
 
     static void formatCommand(char *src, char *dest);
     static void formatSize(unsigned long l_size, char *s_size);

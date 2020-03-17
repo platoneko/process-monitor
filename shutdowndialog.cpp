@@ -13,7 +13,7 @@ ShutdownDialog::ShutdownDialog(bool reboot, QWidget *parent) :
         ui->label->setText("Continue to reboot?");
     } else {
         this->setWindowTitle("Shutdown");
-        this->setWindowTitle("Continue to shutdown?");
+        ui->label->setText("Continue to shutdown?");
     }
 }
 
