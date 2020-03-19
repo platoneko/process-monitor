@@ -50,19 +50,19 @@ void MainWindow::initTableModel() {
 }
 
 void MainWindow::updateLoadAverageLabel() {
-    char buf[MAXLINE];
-    sprintf(buf, "Load average: %.2f %.2f %.2f", currentSysinfo.loads[0]/65536.0, currentSysinfo.loads[1]/65536.0, currentSysinfo.loads[2]/65536.0);
-    ui->loadAverage->setText(buf);
+    char buff[MAXLINE];
+    sprintf(buff, "Load average: %.2f %.2f %.2f", currentSysinfo.loads[0]/65536.0, currentSysinfo.loads[1]/65536.0, currentSysinfo.loads[2]/65536.0);
+    ui->loadAverage->setText(buff);
 }
 
 void MainWindow::updateUptimeLabel() {
-    char buf[MAXLINE];
+    char buff[MAXLINE];
     int hs, ms, ss;
     hs = currentSysinfo.uptime/3600;
     ms = (currentSysinfo.uptime%3600)/60;
     ss = currentSysinfo.uptime%60;
-    sprintf(buf, "Uptime: %2d:%02d:%02d", hs, ms, ss);
-    ui->uptime->setText(buf);
+    sprintf(buff, "Uptime: %2d:%02d:%02d", hs, ms, ss);
+    ui->uptime->setText(buff);
 }
 
 void MainWindow::updateMemBar() {
@@ -71,10 +71,10 @@ void MainWindow::updateMemBar() {
 }
 
 void MainWindow::updateTasksLabel() {
-    char line[MAXLINE];
-    sprintf(line, "Tasks: %4d total, %4d running, %4d sleeping, %4d stopped, %4d zombie",
+    char buff[MAXLINE];
+    sprintf(buff, "Tasks: %4d total, %4d running, %4d sleeping, %4d stopped, %4d zombie",
             taskTotal, taskRunning, taskSleeping, taskStopped, taskZombie);
-    ui->tasks->setText(line);
+    ui->tasks->setText(buff);
 }
 
 void MainWindow::updateCpuBar(){

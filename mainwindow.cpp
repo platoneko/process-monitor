@@ -1,31 +1,30 @@
 #include "mainwindow.h"
 #include "./ui_mainwindow.h"
 
+using namespace std;
+
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent),
     ui(new Ui::MainWindow),
     timer(new QTimer),
     model(new QStandardItemModel),
-    cpuHistory(new std::list<float>(POINT_NUM, 0.0)),
+    cpuHistory(new deque<float>(POINT_NUM, 0.0)),
     cpuSeries(new QLineSeries),
     cpuChart(new QChart),
-    memHistory(new std::list<float>(POINT_NUM, 0.0)),
+    memHistory(new deque<float>(POINT_NUM, 0.0)),
     memSeries(new QLineSeries),
     memChart(new QChart) ,
-    swapHistory(new std::list<float>(POINT_NUM, 0.0)),
+    swapHistory(new deque<float>(POINT_NUM, 0.0)),
     swapSeries(new QLineSeries),
     swapChart(new QChart)
 {
     dir_ptr = opendir("/proc");
     chdir("/proc");
 
-    FILE *fp;
-    char pid_max[MAXLINE];
-    fp = fopen("sys/kernel/pid_max", "r");
-    fgets(pid_max, MAXLINE, fp);
-    fclose(fp);
-    this->pid_max = atoi(pid_max);
+    ifstream infile("/proc/sys/kernel/pid_max");
+    infile >> pid_max;
+    infile.close();
 
     ui->setupUi(this);
     this->setWindowTitle("Process Monitor");
@@ -68,9 +67,10 @@ void MainWindow::update() {
 }
 
 void MainWindow::updateTaskInfo() {
-    FILE *fp;
     struct dirent *dir_entry;
-    char buf[MAXLINE], line[MAXLINE];
+    ifstream infile;
+
+    string buff;
 
     unsigned short uid, pid, ppid;
     char priority, nice;
@@ -78,7 +78,8 @@ void MainWindow::updateTaskInfo() {
     unsigned long minflt, cminflt, majflt, cmajflt, utime, stime;
     long cutime, cstime, num_threads;
     unsigned int flags;
-    char state, comm[MAXLINE];
+    char state;
+    string name;
 
     // char command[MAXLINE];
 
@@ -97,28 +98,26 @@ void MainWindow::updateTaskInfo() {
         if (isNumeric(dir_entry->d_name)) {
             ++taskTotal;
             chdir(dir_entry->d_name);
-            fp = fopen("status", "r");
-            for (int j = 0; j < 9; ++j) {
-                fgets(buf, MAXLINE, fp);
+            infile.open("status");
+            infile >> buff >> name;
+            for (int j = 0; j < 8; ++j) {
+                getline(infile, buff);
             }
-            fclose(fp);
-            sscanf(buf, "%s%hu", line, &uid);
+            infile >> buff >> uid;
+            infile.close();
 
-            fp = fopen("stat", "r");
-            fgets(buf, MAXLINE, fp);
-            sscanf(buf, "%hu%s %c%hu%d%d%d%d%u%lu%lu%lu%lu%lu%lu%ld%ld%c%c%ld",
-            &pid, comm, &state,
-            &ppid, &pgrp, &session, &tty_nr, &tpgid, &flags,
-            &minflt, &cminflt, &majflt, &cmajflt,
-            &utime, &stime, &cutime, &cstime,
-            &priority, &nice,
-            &num_threads);
-            fclose(fp);
+            infile.open("stat");
+            infile >> pid >> buff;
+            infile.get();
+            infile >> state >> ppid >> pgrp >> session >> tty_nr >> tpgid >> flags;
+            infile >> minflt >> cminflt >> majflt >> cmajflt;
+            infile >> utime >> stime >> cutime >> cstime;
+            infile >> priority >> nice >> num_threads;
+            infile.close();
 
-            fp = fopen("statm", "r");
-            fgets(buf, MAXLINE, fp);
-            sscanf(buf, "%lu%lu%lu", &virt, &res, &shr);
-            fclose(fp);
+            infile.open("statm");
+            infile >> virt >> res >> shr;
+            infile.close();
             virt <<= 2;
             res <<= 2;
             shr <<= 2;
@@ -167,10 +166,10 @@ void MainWindow::updateTaskInfo() {
                 taskInfo->cpu = float(utime+stime-taskInfo->time)*1000000/timeInterval;
                 taskInfo->mem = float(res<<10)/currentSysinfo.totalram*100;
                 taskInfo->time = utime+stime;
-                taskInfo->comm = std::string(comm, 1, strlen(comm)-2);
+                taskInfo->comm = name;
                 taskInfo->valid = true;
                 cpuUsed += taskInfo->cpu;
-                if (searchMode && strstr(comm, searchedCommand.c_str())) {
+                if (searchMode && name.find(searchedCommand) != string::npos) {
                     taskInfo->matched = true;
                     ++matchedTaskTotal;
                 } else {
@@ -181,8 +180,8 @@ void MainWindow::updateTaskInfo() {
                                                  virt, res, shr,
                                                  state, float(res<<10)/currentSysinfo.totalram*100,
                                                  utime+stime,
-                                                 std::string(comm, 1, strlen(comm)-2));
-                if (searchMode && strstr(comm, searchedCommand.c_str())) {
+                                                 name);
+                if (searchMode && name.find(searchedCommand) != string::npos) {
                     taskInfoDict[pid]->matched = true;
                     ++matchedTaskTotal;
                 } else {

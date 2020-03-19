@@ -31,9 +31,13 @@
 #include <fcntl.h>
 #include <sys/mman.h>
 
+#include <iostream>
+#include <fstream>
+#include <sstream>
+#include <string>
 #include <cstring>
 #include <unordered_map>
-#include <list>
+#include <deque>
 
 
 QT_BEGIN_NAMESPACE
@@ -120,15 +124,15 @@ private:
     bool searchMode = false;
     std::string searchedCommand;
 
-    std::list<float> *cpuHistory;
+    std::deque<float> *cpuHistory;
     QLineSeries *cpuSeries;
     QChart *cpuChart;
 
-    std::list<float> *memHistory;
+    std::deque<float> *memHistory;
     QLineSeries *memSeries;
     QChart *memChart;
 
-    std::list<float> *swapHistory;
+    std::deque<float> *swapHistory;
     QLineSeries *swapSeries;
     QChart *swapChart;
 

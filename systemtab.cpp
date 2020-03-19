@@ -1,6 +1,7 @@
 #include "mainwindow.h"
 #include "./ui_mainwindow.h"
 
+using namespace std;
 
 void MainWindow::initSystemTab() {
     updateOsInfoLabel();
@@ -10,70 +11,54 @@ void MainWindow::initSystemTab() {
 }
 
 void MainWindow::updateOsInfoLabel() {
-    char buf1[MAXLINE], buf2[MAXLINE];
-    FILE *fp;
-    fp = fopen("/proc/sys/kernel/osrelease", "r");
-    fgets(buf1, MAXLINE, fp);
-    fclose(fp);
-    buf1[strlen(buf1)-1] = 0;
-    fp = fopen("/proc/sys/kernel/ostype", "r");
-    fgets(buf2, MAXLINE, fp);
-    fclose(fp);
-    buf2[strlen(buf2)-1] = 0;
-    sprintf(buf1, "%s\t%s", buf1, buf2);
-    ui->osInfoLabel->setText(buf1);
+    string osrelease, ostype;
+    ifstream infile;
+    infile.open("/proc/sys/kernel/osrelease");
+    getline(infile, osrelease);
+    infile.close();
+    infile.open("/proc/sys/kernel/ostype");
+    getline(infile, ostype);
+    infile.close();
+    ostringstream out;
+    out << osrelease << "\t" << ostype;
+    ui->osInfoLabel->setText(out.str().c_str());
 }
 
 void MainWindow::updateCpuInfoGroup() {
-    char buf1[MAXLINE], buf2[MAXLINE];
+    string buff, info;
     int cores, threads;
-    FILE *fp;
-    fp = fopen("/proc/cpuinfo", "r");
-    fgets(buf1, MAXLINE, fp);  // processor
-    fgets(buf1, MAXLINE, fp);  // vendor_id
-    fgets(buf1, MAXLINE, fp);  // cpu family
-    fgets(buf1, MAXLINE, fp);  // model
-    fgets(buf1, MAXLINE, fp);  // model name
-    strtok(buf1, "\t");
-    strcpy(buf2, strtok(nullptr, "\t")+2);
-    buf2[strlen(buf2)-1] = 0;
-    ui->cpuInfoLabel->setText(buf2);
-    fgets(buf1, MAXLINE, fp);  // stepping
-    fgets(buf1, MAXLINE, fp);  // microcode
-    fgets(buf1, MAXLINE, fp);  // cpu MHz
-    fgets(buf1, MAXLINE, fp);  // cache size
-    strtok(buf1, "\t");
-    strcpy(buf2, strtok(nullptr, "\t")+2);
-    buf2[strlen(buf2)-1] = 0;
-    sprintf(buf1, "Cache %s", buf2);
-    ui->cpuCacheInfoLabel->setText(buf1);
-    fgets(buf1, MAXLINE, fp);  // physical id
-    fgets(buf1, MAXLINE, fp);  // siblings
-    strtok(buf1, "\t");
-    strcpy(buf2, strtok(nullptr, "\t")+2);
-    buf2[strlen(buf2)-1] = 0;
-    threads = atoi(buf2);
-    fgets(buf1, MAXLINE, fp);  // core id
-    fgets(buf1, MAXLINE, fp);  // cpu cores
-    strtok(buf1, "\t");
-    strcpy(buf2, strtok(nullptr, "\t")+1);
-    buf2[strlen(buf2)-1] = 0;
-    cores = atoi(buf2);
-    sprintf(buf1, "%d cores, %d threads", cores, threads);
-    ui->cpuCoreInfoLabel->setText(buf1);
-    fclose(fp);
+    ostringstream out;
+    ifstream infile("/proc/cpuinfo");
+    getline(infile, buff);  // processor
+    getline(infile, buff);  // vendor_id
+    getline(infile, buff);  // cpu family
+    getline(infile, buff);  // model
+    getline(infile, buff, ':');  // model name
+    infile.get();
+    getline(infile, info);
+    ui->cpuInfoLabel->setText(info.c_str());
+    getline(infile, buff);  // stepping
+    getline(infile, buff);  // microcode
+    getline(infile, buff);  // cpu MHz
+    getline(infile, buff, ':');  // cache size
+    infile.get();
+    getline(infile, info);
+    ui->cpuCacheInfoLabel->setText(("Cache\t" + info).c_str());
+    getline(infile, buff);  // physical id
+    getline(infile, buff, ':');  // siblings
+    infile >> threads;
+    getline(infile, buff);  // core id
+    getline(infile, buff, ':');  // cpu cores
+    infile >> cores;
+    out << threads << " threads, " << cores << " cores";
+    ui->cpuCoreInfoLabel->setText(out.str().c_str());
 }
 
 void MainWindow::updateHostnameGroup() {
-    char buf[MAXLINE];
-    FILE *fp;
-
-    fp = fopen("/proc/sys/kernel/hostname", "r");
-    fgets(buf, MAXLINE, fp);
-    fclose(fp);
-    buf[strlen(buf)-1] = 0;
-    ui->hostnameLabel->setText(buf);
-
+    string hostname;
+    ifstream infile("/proc/sys/kernel/hostname");
+    getline(infile, hostname);
+    ui->hostnameLabel->setText(hostname.c_str());
     ui->userLabel->setText(getpwuid(getuid())->pw_name);
     ui->groupLabel->setText(getgrgid(getgid())->gr_name);
 }
