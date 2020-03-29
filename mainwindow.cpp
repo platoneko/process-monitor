@@ -9,13 +9,13 @@ MainWindow::MainWindow(QWidget *parent)
     ui(new Ui::MainWindow),
     timer(new QTimer),
     model(new QStandardItemModel),
-    cpuHistory(new deque<float>(POINT_NUM, 0.0)),
+    cpuHistory(new deque<float>),
     cpuSeries(new QLineSeries),
     cpuChart(new QChart),
-    memHistory(new deque<float>(POINT_NUM, 0.0)),
+    memHistory(new deque<float>),
     memSeries(new QLineSeries),
     memChart(new QChart) ,
-    swapHistory(new deque<float>(POINT_NUM, 0.0)),
+    swapHistory(new deque<float>),
     swapSeries(new QLineSeries),
     swapChart(new QChart)
 {

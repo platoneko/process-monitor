@@ -67,7 +67,9 @@ void MainWindow::updateUptimeLabel() {
 
 void MainWindow::updateMemBar() {
     ui->memBar->setValue((currentSysinfo.totalram - currentSysinfo.freeram)*100 / currentSysinfo.totalram);
-    ui->swpBar->setValue((currentSysinfo.totalswap - currentSysinfo.freeswap)*100 / currentSysinfo.totalswap);
+    if (currentSysinfo.totalswap > 0) {
+        ui->swpBar->setValue((currentSysinfo.totalswap - currentSysinfo.freeswap)*100 / currentSysinfo.totalswap);
+    }
 }
 
 void MainWindow::updateTasksLabel() {
@@ -78,7 +80,7 @@ void MainWindow::updateTasksLabel() {
 }
 
 void MainWindow::updateCpuBar(){
-    ui->cpuBar->setValue(int(cpuUsed));
+    ui->cpuBar->setValue(std::min(int(cpuUsed), 100));
 }
 
 void MainWindow::updateTaskTable() {

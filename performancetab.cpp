@@ -32,12 +32,14 @@ void MainWindow::initPerformanceTab() {
 }
 
 void MainWindow::updateCpuChart() {
-    cpuHistory->erase(cpuHistory->begin());
+    if (cpuHistory->size() == POINT_NUM) {
+        cpuHistory->pop_front();
+    }
     cpuHistory->push_back(cpuUsed/100);
     cpuSeries->clear();
     int x = 1;
-    for (auto &it: *cpuHistory) {
-        cpuSeries->append(x, qreal(it));
+    for (auto &y: *cpuHistory) {
+        cpuSeries->append(POINT_NUM - cpuHistory->size() + x, qreal(y));
         ++x;
     }
 }
@@ -50,12 +52,14 @@ void MainWindow::updateMemChart() {
             double(currentSysinfo.sharedram>>10)/1024,
             double(currentSysinfo.bufferram>>10)/1024);
     ui->memDetailLabel->setText(buf);
-    memHistory->erase(memHistory->begin());
+    if (memHistory->size() == POINT_NUM) {
+        memHistory->pop_front();
+    }
     memHistory->push_back(1 - float(currentSysinfo.freeram) / currentSysinfo.totalram);
     memSeries->clear();
     int x = 1;
-    for (auto &it: *memHistory) {
-        memSeries->append(x, qreal(it));
+    for (auto &y: *memHistory) {
+        memSeries->append(POINT_NUM - memHistory->size() + x, qreal(y));
         ++x;
     }
 }
@@ -66,12 +70,16 @@ void MainWindow::updateSwapChart() {
             double(currentSysinfo.totalswap>>10)/1024,
             double(currentSysinfo.freeswap>>10)/1024);
     ui->swapDetailLabel->setText(buf);
-    swapHistory->erase(swapHistory->begin());
-    swapHistory->push_back(1 - float(currentSysinfo.freeswap) / currentSysinfo.totalswap);
-    swapSeries->clear();
-    int x = 1;
-    for (auto &it: *swapHistory) {
-        swapSeries->append(x, qreal(it));
-        ++x;
+    if (currentSysinfo.totalswap > 0) {
+        if (swapHistory->size() == POINT_NUM) {
+            swapHistory->pop_front();
+        }
+        swapHistory->push_back(1 - float(currentSysinfo.freeswap) / currentSysinfo.totalswap);
+        swapSeries->clear();
+        int x = 1;
+        for (auto &y: *swapHistory) {
+            swapSeries->append(POINT_NUM - swapHistory->size() + x, qreal(y));
+            ++x;
+        }
     }
 }
