@@ -50,7 +50,6 @@ MainWindow::~MainWindow()
 }
 
 void MainWindow::update() {
-    updateFree.acquire();
     updateSysinfo();
     updateTaskInfo();
     updateMemBar();
@@ -63,7 +62,6 @@ void MainWindow::update() {
     updateCpuChart();
     updateMemChart();
     updateSwapChart();
-    updateFree.release();
 }
 
 void MainWindow::updateTaskInfo() {

@@ -16,7 +16,6 @@
 #include <QItemSelection>
 #include <QScrollBar>
 #include <QKeyEvent>
-#include <QSemaphore>
 #include <QMessageBox>
 #include <QLineSeries>
 #include <QtCharts>
@@ -75,7 +74,6 @@ enum SortMethodType {PID_ASC, PID_DES,
                      MEM_ASC, MEM_DES,
                      TIME_ASC, TIME_DES};
 
-static QSemaphore updateFree(1);
 
 class MainWindow : public QMainWindow
 {
@@ -85,6 +83,8 @@ public:
 
     MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
+    MainWindow(const MainWindow &) = delete;
+    MainWindow &operator=(const MainWindow &) = delete;
     void update();
 
 private:
