@@ -71,7 +71,7 @@ void MainWindow::updateTaskInfo() {
     string buff;
 
     unsigned short uid, pid, ppid;
-    char priority, nice;
+    int priority, nice;
     int  pgrp, session, tty_nr, tpgid;
     unsigned long minflt, cminflt, majflt, cmajflt, utime, stime;
     long cutime, cstime, num_threads;
